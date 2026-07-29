@@ -18,8 +18,8 @@ public class LoginResponse {
             String lastName,
             String email,
             String phone,
-            String token) {
-
+            String token
+    ) {
         this.userId = userId;
         this.firstName = firstName;
         this.lastName = lastName;
