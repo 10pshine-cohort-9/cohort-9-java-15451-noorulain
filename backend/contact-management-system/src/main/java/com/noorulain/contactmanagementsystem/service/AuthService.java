@@ -28,29 +28,36 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
+
     @Transactional
     public User register(RegisterRequest request) {
 
-        log.info(
-                "Registration attempt for email: {} and phone: {}",
-                request.getEmail(),
-                request.getPhone()
-        );
+        log.info("Registration attempt received");
+
+        // Convert blank values to null
+        if (request.getEmail() != null &&
+                request.getEmail().isBlank()) {
+            request.setEmail(null);
+        }
+
+        if (request.getPhone() != null &&
+                request.getPhone().isBlank()) {
+            request.setPhone(null);
+        }
+
 
         // At least email or phone must be provided
-        if ((request.getEmail() == null ||
-                request.getEmail().isBlank()) &&
-                (request.getPhone() == null ||
-                request.getPhone().isBlank())) {
+        if (request.getEmail() == null &&
+                request.getPhone() == null) {
 
             throw new IllegalArgumentException(
                     "Either email or phone number is required"
             );
         }
 
+
         // Normalize and check email
-        if (request.getEmail() != null &&
-                !request.getEmail().isBlank()) {
+        if (request.getEmail() != null) {
 
             String email =
                     request.getEmail()
@@ -60,8 +67,7 @@ public class AuthService {
             if (userRepository.existsByEmail(email)) {
 
                 log.warn(
-                        "Registration failed. Email already exists: {}",
-                        email
+                        "Registration failed. Email already exists"
                 );
 
                 throw new IllegalArgumentException(
@@ -72,9 +78,9 @@ public class AuthService {
             request.setEmail(email);
         }
 
+
         // Normalize and check phone
-        if (request.getPhone() != null &&
-                !request.getPhone().isBlank()) {
+        if (request.getPhone() != null) {
 
             String phone =
                     request.getPhone()
@@ -83,8 +89,7 @@ public class AuthService {
             if (userRepository.existsByPhone(phone)) {
 
                 log.warn(
-                        "Registration failed. Phone already exists: {}",
-                        phone
+                        "Registration failed. Phone already exists"
                 );
 
                 throw new IllegalArgumentException(
@@ -95,6 +100,7 @@ public class AuthService {
             request.setPhone(phone);
         }
 
+
         // Create new user
         User user = new User();
 
@@ -103,32 +109,34 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
 
-        // Always encode password before saving
         user.setPassword(
                 passwordEncoder.encode(
                         request.getPassword()
                 )
         );
 
+
         User savedUser =
                 userRepository.save(user);
+
 
         log.info(
                 "User registered successfully with ID: {}",
                 savedUser.getId()
         );
 
+
         return savedUser;
     }
 
+
     public LoginResponse login(LoginRequest request) {
 
-        // Login using email or phone
         String identifier =
                 request.getIdentifier()
                         .trim();
 
-        // Authenticate user
+
         Authentication authentication =
                 authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(
@@ -137,9 +145,10 @@ public class AuthService {
                         )
                 );
 
+
         User user;
 
-        // Find user by email
+
         if (identifier.contains("@")) {
 
             user =
@@ -153,7 +162,6 @@ public class AuthService {
 
         } else {
 
-            // Find user by phone
             user =
                     userRepository.findByPhone(
                             identifier
@@ -164,18 +172,19 @@ public class AuthService {
                     );
         }
 
-        // Generate JWT token
+
         String token =
                 jwtService.generateToken(
                         authentication.getName()
                 );
+
 
         log.info(
                 "User logged in successfully with ID: {}",
                 user.getId()
         );
 
-        // Return login response
+
         return new LoginResponse(
                 user.getId(),
                 user.getFirstName(),
