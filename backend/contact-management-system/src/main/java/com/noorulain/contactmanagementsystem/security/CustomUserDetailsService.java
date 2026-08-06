@@ -18,10 +18,17 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
 
+        // Handle empty username
+        if (username == null || username.isBlank()) {
+            throw new UsernameNotFoundException(
+                    "Username cannot be empty"
+            );
+        }
+
         User user;
 
         // Login using email
-        if (username != null && username.contains("@")) {
+        if (username.contains("@")) {
 
             user = userRepository.findByEmail(
                     username.trim().toLowerCase()
