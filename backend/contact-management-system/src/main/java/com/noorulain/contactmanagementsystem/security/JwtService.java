@@ -1,6 +1,7 @@
 package com.noorulain.contactmanagementsystem.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,11 +73,16 @@ public class JwtService {
                 .getPayload();
     }
 
-    public boolean isTokenExpired(String token) {
+  public boolean isTokenExpired(String token) {
 
+    try {
         return extractExpiration(token)
                 .before(new Date());
+
+    } catch (ExpiredJwtException e) {
+        return true;
     }
+}
 
     public boolean isTokenValid(
             String token,
