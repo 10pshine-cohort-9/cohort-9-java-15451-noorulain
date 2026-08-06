@@ -35,6 +35,13 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- H2 Database (Test Only) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Spring Security -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -53,7 +60,7 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- PostgreSQL Database Driver -->
+        <!-- PostgreSQL Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -75,7 +82,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- JWT Jackson JSON Support -->
+        <!-- JWT Jackson -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
@@ -154,7 +161,6 @@
 
                 <executions>
 
-                    <!-- Compile Main Source -->
                     <execution>
                         <id>default-compile</id>
                         <phase>compile</phase>
@@ -172,7 +178,6 @@
                         </configuration>
                     </execution>
 
-                    <!-- Compile Test Source -->
                     <execution>
                         <id>default-testCompile</id>
                         <phase>test-compile</phase>
