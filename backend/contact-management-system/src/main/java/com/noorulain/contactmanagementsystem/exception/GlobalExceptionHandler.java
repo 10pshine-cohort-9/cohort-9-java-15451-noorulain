@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.stream.Collectors;
 
@@ -54,6 +56,21 @@ public class GlobalExceptionHandler {
                         null
                 ));
     }
+    @ExceptionHandler({
+        BadCredentialsException.class,
+        UsernameNotFoundException.class
+})
+public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(
+        Exception ex) {
+
+    return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(new ApiResponse<>(
+                    false,
+                    "Invalid credentials",
+                    null
+            ));
+}
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneralException(
