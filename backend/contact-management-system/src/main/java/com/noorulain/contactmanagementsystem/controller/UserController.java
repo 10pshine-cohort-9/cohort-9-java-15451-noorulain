@@ -1,67 +1,73 @@
 package com.noorulain.contactmanagementsystem.controller;
 
+import com.noorulain.contactmanagementsystem.dto.ApiResponse;
 import com.noorulain.contactmanagementsystem.entity.User;
-import com.noorulain.contactmanagementsystem.repository.UserRepository;
+import com.noorulain.contactmanagementsystem.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getCurrentUser(
-            Authentication authentication
-    ) {
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("User is not authenticated");
-        }
-
-        String identifier = authentication.getName();
-
-        User user;
-
-        if (identifier.contains("@")) {
-            user = userRepository.findByEmail(identifier.toLowerCase())
-                    .orElseThrow(() ->
-                            new RuntimeException("User not found")
-                    );
-        } else {
-            user = userRepository.findByPhone(identifier)
-                    .orElseThrow(() ->
-                            new RuntimeException("User not found")
-                    );
-        }
-
-        Map<String, Object> userData = new LinkedHashMap<>();
-
-        userData.put("userId", user.getId());
-        userData.put("firstName", user.getFirstName());
-        userData.put("lastName", user.getLastName());
-        userData.put("email", user.getEmail());
-        userData.put("phone", user.getPhone());
-        userData.put("createdAt", user.getCreatedAt());
-
-        Map<String, Object> response = new LinkedHashMap<>();
-
-        response.put("success", true);
-        response.put(
-                "message",
-                "User profile retrieved successfully"
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Users retrieved successfully",
+                        userService.getAllUsers()
+                )
         );
-        response.put("data", userData);
+    }
 
-        return ResponseEntity.ok(response);
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<User>> getUserById(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "User retrieved successfully",
+                        userService.getUserById(id)
+                )
+        );
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<User>> updateUser(
+            @PathVariable Long id,
+            @RequestBody User user) {
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "User updated successfully",
+                        userService.updateUser(id, user)
+                )
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(
+            @PathVariable Long id) {
+
+        userService.deleteUser(id);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "User deleted successfully",
+                        null
+                )
+        );
     }
 }
