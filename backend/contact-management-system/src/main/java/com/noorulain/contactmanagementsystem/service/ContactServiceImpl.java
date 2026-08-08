@@ -2,6 +2,7 @@ package com.noorulain.contactmanagementsystem.service;
 
 import com.noorulain.contactmanagementsystem.entity.Contact;
 import com.noorulain.contactmanagementsystem.entity.User;
+import com.noorulain.contactmanagementsystem.exception.ResourceNotFoundException;
 import com.noorulain.contactmanagementsystem.repository.ContactRepository;
 import com.noorulain.contactmanagementsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,27 +21,34 @@ public class ContactServiceImpl implements ContactService {
     private final ContactRepository contactRepository;
     private final UserRepository userRepository;
 
-  private User getUser(String username) {
+    private User getUser(String username) {
 
-    if (username == null || username.trim().isEmpty()) {
-        throw new IllegalArgumentException("Authenticated user not found");
+        if (username == null || username.trim().isEmpty()) {
+            throw new ResourceNotFoundException(
+                    "Authenticated user not found"
+            );
+        }
+
+        String identifier = username.trim();
+
+        if (identifier.contains("@")) {
+
+            return userRepository.findByEmail(
+                    identifier.toLowerCase()
+            ).orElseThrow(() ->
+                    new ResourceNotFoundException(
+                            "User not found"
+                    )
+            );
+        }
+
+        return userRepository.findByPhone(identifier)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found"
+                        )
+                );
     }
-
-    String identifier = username.trim();
-
-    if (identifier.contains("@")) {
-
-        return userRepository.findByEmail(
-                identifier.toLowerCase()
-        ).orElseThrow(() ->
-                new IllegalArgumentException("User not found")
-        );
-    }
-
-    return userRepository.findByPhone(identifier)
-            .orElseThrow(() ->
-                    new IllegalArgumentException("User not found"));
-}
 
     @Override
     public Contact createContact(Contact contact, String username) {
@@ -51,7 +59,8 @@ public class ContactServiceImpl implements ContactService {
                 contact.getPhone(), user)) {
 
             throw new IllegalArgumentException(
-                    "A contact with this phone number already exists");
+                    "A contact with this phone number already exists"
+            );
         }
 
         contact.setUser(user);
@@ -84,8 +93,10 @@ public class ContactServiceImpl implements ContactService {
 
         return contactRepository.findByIdAndUser(id, user)
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Contact not found"));
+                        new ResourceNotFoundException(
+                                "Contact not found"
+                        )
+                );
     }
 
     @Override
@@ -99,8 +110,10 @@ public class ContactServiceImpl implements ContactService {
         Contact existingContact =
                 contactRepository.findByIdAndUser(id, user)
                         .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Contact not found"));
+                                new ResourceNotFoundException(
+                                        "Contact not found"
+                                )
+                        );
 
         if (!existingContact.getPhone()
                 .equals(contact.getPhone())
@@ -108,7 +121,8 @@ public class ContactServiceImpl implements ContactService {
                         contact.getPhone(), user)) {
 
             throw new IllegalArgumentException(
-                    "A contact with this phone number already exists");
+                    "A contact with this phone number already exists"
+            );
         }
 
         existingContact.setFirstName(contact.getFirstName());
@@ -137,8 +151,10 @@ public class ContactServiceImpl implements ContactService {
         Contact contact =
                 contactRepository.findByIdAndUser(id, user)
                         .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "Contact not found"));
+                                new ResourceNotFoundException(
+                                        "Contact not found"
+                                )
+                        );
 
         contactRepository.delete(contact);
 
@@ -148,3 +164,4 @@ public class ContactServiceImpl implements ContactService {
         );
     }
 }
+

@@ -1,5 +1,5 @@
 package com.noorulain.contactmanagementsystem.exception;
-
+import com.noorulain.contactmanagementsystem.exception.ResourceNotFoundException;
 import com.noorulain.contactmanagementsystem.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
