@@ -8,12 +8,13 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "contacts",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_contacts_user_phone",
-                columnNames = {"user_id", "phone"}
-        )
+    name = "contacts",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_contacts_user_phone",
+        columnNames = {"user_id", "phone"}
+    )
 )
+
 @Getter
 @Setter
 public class Contact {
