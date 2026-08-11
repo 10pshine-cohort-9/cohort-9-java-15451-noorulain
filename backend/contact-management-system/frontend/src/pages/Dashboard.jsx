@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getContacts } from "../services/contactService";
@@ -7,14 +8,25 @@ import "../styles/dashboard.css";
 export default function Dashboard() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  let user = {};
+
+  try {
+    user = JSON.parse(localStorage.getItem("user") || "{}");
+  } catch (error) {
+    console.error("Unable to read user data from local storage.");
+    user = {};
+  }
 
   useEffect(() => {
     loadContacts();
   }, []);
 
   async function loadContacts() {
+    setLoading(true);
+    setLoadError(false);
+
     try {
       const response = await getContacts();
 
@@ -26,8 +38,9 @@ export default function Dashboard() {
 
       setContacts(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Failed to load contacts:", error);
+      console.error("Failed to load contacts.");
       setContacts([]);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -50,7 +63,6 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-layout">
-
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-brand">
@@ -78,7 +90,6 @@ export default function Dashboard() {
 
       {/* Main */}
       <main className="dashboard-main">
-
         <header className="dashboard-header">
           <div>
             <p className="welcome-label">Welcome back 👋</p>
@@ -96,7 +107,6 @@ export default function Dashboard() {
 
         {/* Stats */}
         <section className="stats-grid">
-
           <div className="stat-card">
             <div className="stat-icon purple">◉</div>
             <div>
@@ -120,12 +130,10 @@ export default function Dashboard() {
               <h2>{loading ? "—" : Math.min(totalContacts, 5)}</h2>
             </div>
           </div>
-
         </section>
 
         {/* Recent Contacts */}
         <section className="dashboard-section">
-
           <div className="section-header">
             <div>
               <h2>Recent Contacts</h2>
@@ -140,6 +148,23 @@ export default function Dashboard() {
           {loading ? (
             <div className="empty-state">
               Loading contacts...
+            </div>
+          ) : loadError ? (
+            <div className="empty-state">
+              <div className="empty-icon">⚠</div>
+              <h3>Unable to load contacts</h3>
+              <p>
+                Something went wrong while loading your contacts.
+                Please try again.
+              </p>
+
+              <button
+                type="button"
+                className="empty-button"
+                onClick={loadContacts}
+              >
+                Try again
+              </button>
             </div>
           ) : recentContacts.length === 0 ? (
             <div className="empty-state">
@@ -175,9 +200,7 @@ export default function Dashboard() {
               ))}
             </div>
           )}
-
         </section>
-
       </main>
     </div>
   );
