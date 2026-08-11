@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   let user = {};
 
@@ -60,6 +61,23 @@ export default function Dashboard() {
       return dateB - dateA;
     })
     .slice(0, 5);
+
+  // Search recent contacts by name, email, or phone
+  const filteredContacts = recentContacts.filter((contact) => {
+    const searchText = searchTerm.toLowerCase();
+
+    const fullName =
+      `${contact.firstName || ""} ${contact.lastName || ""}`.toLowerCase();
+
+    const email = (contact.email || "").toLowerCase();
+    const phone = (contact.phone || "").toLowerCase();
+
+    return (
+      fullName.includes(searchText) ||
+      email.includes(searchText) ||
+      phone.includes(searchText)
+    );
+  });
 
   return (
     <div className="dashboard-layout">
@@ -145,6 +163,16 @@ export default function Dashboard() {
             </Link>
           </div>
 
+          {/* Search */}
+          <div className="contact-search">
+            <input
+              type="text"
+              placeholder="Search contacts by name, email or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
           {loading ? (
             <div className="empty-state">
               Loading contacts...
@@ -178,9 +206,25 @@ export default function Dashboard() {
                 Add your first contact
               </Link>
             </div>
+          ) : filteredContacts.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">⌕</div>
+              <h3>No contacts found</h3>
+              <p>
+                No contacts match your search.
+              </p>
+
+              <button
+                type="button"
+                className="empty-button"
+                onClick={() => setSearchTerm("")}
+              >
+                Clear search
+              </button>
+            </div>
           ) : (
             <div className="contact-list">
-              {recentContacts.map((contact) => (
+              {filteredContacts.map((contact) => (
                 <div className="contact-row" key={contact.id}>
                   <div className="contact-avatar">
                     {(contact.firstName?.[0] || "C").toUpperCase()}
@@ -205,3 +249,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
