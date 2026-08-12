@@ -63,30 +63,41 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-layout">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <div className="sidebar-logo">C</div>
-          <span>ContactHub</span>
-        </div>
+    {/* Sidebar */}
+<aside className="sidebar">
+  <div className="sidebar-brand">
+    <div className="sidebar-logo">C</div>
+    <span>ContactHub</span>
+  </div>
 
-        <nav className="sidebar-nav">
-          <Link to="/dashboard" className="nav-item active">
-            <span>▦</span>
-            Dashboard
-          </Link>
+  <nav className="sidebar-nav">
+   <Link to="/dashboard" className="nav-item active">
+      <span>▦</span>
+      Dashboard
+    </Link>
 
-          <Link to="/contacts" className="nav-item">
-            <span>☷</span>
-            Contacts
-          </Link>
-        </nav>
+  <Link to="/contacts" className="nav-item">
+      <span>☷</span>
+      Contacts
+    </Link>
 
-        <button className="logout-button" onClick={handleLogout}>
-          <span>↪</span>
-          Logout
-        </button>
-      </aside>
+    <Link to="/profile" className="nav-item">
+      <span>👤</span>
+      Profile
+    </Link>
+  </nav>
+
+ <button
+  className="logout-button"
+  onClick={handleLogout}
+ >
+  
+    <span>↪</span>
+    Logout
+  </button>
+</aside>
+
+        
 
       {/* Main */}
       <main className="dashboard-main">
@@ -114,7 +125,12 @@ export default function Dashboard() {
               <h2>{loading ? "—" : totalContacts}</h2>
             </div>
           </div>
-
+<section className="quick-actions">
+  <Link to="/contacts" className="quick-card">
+    <h3>Manage Contacts</h3>
+    <p>View, edit and organize all your contacts.</p>
+  </Link>
+</section>
           <div className="stat-card">
             <div className="stat-icon blue">✓</div>
             <div>

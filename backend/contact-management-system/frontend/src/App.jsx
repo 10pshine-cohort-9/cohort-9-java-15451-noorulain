@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Contacts from "./pages/Contacts";
+import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -11,7 +12,6 @@ export default function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       <Route path="/login" element={<Login />} />
-
       <Route path="/register" element={<Register />} />
 
       <Route
@@ -28,6 +28,15 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Contacts />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         }
       />

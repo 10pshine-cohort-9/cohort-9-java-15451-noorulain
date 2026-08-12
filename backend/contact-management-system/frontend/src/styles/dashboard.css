@@ -537,3 +537,36 @@
     padding: 22px;
   }
 }
+.quick-actions {
+  margin: 25px 0;
+}
+
+.quick-card {
+  display: block;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px;
+  text-decoration: none;
+  color: #222;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #ececec;
+}
+
+.quick-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.quick-card h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: #6c63ff;
+}
+
+.quick-card p {
+  margin: 0;
+  color: #666;
+  font-size: 15px;
+  line-height: 1.6;
+}

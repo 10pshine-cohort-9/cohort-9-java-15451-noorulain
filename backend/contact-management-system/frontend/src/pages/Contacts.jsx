@@ -202,8 +202,8 @@ export default function Contacts() {
 
         <header className="dashboard-header">
           <div>
-            <p className="welcome-label">Contact management</p>
-            <h1>Contacts</h1>
+            <p className="welcome-label">Manage your contacts</p>
+<h1>Contact Directory</h1>
           </div>
 
           <button
