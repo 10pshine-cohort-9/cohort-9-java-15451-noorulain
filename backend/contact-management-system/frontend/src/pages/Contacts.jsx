@@ -20,54 +20,66 @@ const emptyForm = {
 export default function Contacts() {
   const [contacts, setContacts] = useState([]);
   const [form, setForm] = useState(emptyForm);
-  const [search, setSearch] = useState("");
-  const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const [showForm, setShowForm] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const contactsPerPage = 5;
 
   useEffect(() => {
     loadContacts();
   }, []);
 
-  async function loadContacts() {
+  const loadContacts = async () => {
     try {
       setLoading(true);
+      setError("");
+
       const response = await getContacts();
 
-      const data =
-        response?.data ||
-        response?.contacts ||
-        response ||
-        [];
+      const data = Array.isArray(response)
+        ? response
+        : response?.data || [];
 
-      setContacts(Array.isArray(data) ? data : []);
+      setContacts(data);
     } catch (err) {
-      console.error(err);
+      console.error("Error loading contacts:", err);
       setError(
-        err.response?.data?.message || "Failed to load contacts."
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          "Failed to load contacts."
       );
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  function handleChange(e) {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  }
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
-  function openAddForm() {
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  };
+
+  const openAddForm = () => {
     setEditingId(null);
     setForm(emptyForm);
     setError("");
+    setSuccess("");
     setShowForm(true);
-  }
+  };
 
-  function openEditForm(contact) {
+  const openEditForm = (contact) => {
     setEditingId(contact.id);
 
     setForm({
@@ -80,22 +92,42 @@ export default function Contacts() {
     });
 
     setError("");
+    setSuccess("");
     setShowForm(true);
-  }
+  };
 
-  function closeForm() {
+  const closeForm = () => {
+    if (saving) return;
+
     setShowForm(false);
     setEditingId(null);
     setForm(emptyForm);
     setError("");
-  }
+  };
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
     setError("");
+    setSuccess("");
 
-    if (!form.firstName || !form.lastName || !form.phone) {
-      setError("First name, last name and phone are required.");
+    if (!form.firstName.trim()) {
+      setError("First name is required.");
+      return;
+    }
+
+    if (!form.lastName.trim()) {
+      setError("Last name is required.");
+      return;
+    }
+
+    if (!form.phone.trim()) {
+      setError("Phone number is required.");
+      return;
+    }
+
+    if (!form.email.trim()) {
+      setError("Email is required.");
       return;
     }
 
@@ -104,25 +136,32 @@ export default function Contacts() {
 
       if (editingId) {
         await updateContact(editingId, form);
+        setSuccess("Contact updated successfully.");
       } else {
         await createContact(form);
+        setSuccess("Contact created successfully.");
       }
 
-      closeForm();
       await loadContacts();
+
+      setShowForm(false);
+      setEditingId(null);
+      setForm(emptyForm);
+      setCurrentPage(1);
     } catch (err) {
-      console.error(err);
+      console.error("Error saving contact:", err);
 
       setError(
-        err.response?.data?.message ||
-          "Unable to save contact. Please try again."
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          "Failed to save contact."
       );
     } finally {
       setSaving(false);
     }
-  }
+  };
 
-  async function handleDelete(id) {
+  const handleDelete = async (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this contact?"
     );
@@ -130,334 +169,396 @@ export default function Contacts() {
     if (!confirmed) return;
 
     try {
+      setError("");
+      setSuccess("");
+
       await deleteContact(id);
+
+      setSuccess("Contact deleted successfully.");
+
       await loadContacts();
+
+      const remainingContacts = filteredContacts.length - 1;
+      const maxPage = Math.max(
+        1,
+        Math.ceil(remainingContacts / contactsPerPage)
+      );
+
+      setCurrentPage((page) => Math.min(page, maxPage));
     } catch (err) {
-      console.error(err);
+      console.error("Error deleting contact:", err);
 
       setError(
-        err.response?.data?.message ||
-          "Unable to delete contact."
+        err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          "Failed to delete contact."
       );
     }
-  }
+  };
 
   const filteredContacts = useMemo(() => {
-    const query = search.toLowerCase().trim();
+    const searchValue = search.trim().toLowerCase();
 
-    if (!query) return contacts;
+    if (!searchValue) {
+      return contacts;
+    }
 
-    return contacts.filter((contact) =>
-      [
-        contact.firstName,
-        contact.lastName,
-        contact.email,
-        contact.phone,
-        contact.company,
-      ]
-        .filter(Boolean)
-        .some((value) =>
-          String(value).toLowerCase().includes(query)
-        )
-    );
+    return contacts.filter((contact) => {
+      const fullName =
+        `${contact.firstName || ""} ${contact.lastName || ""}`.toLowerCase();
+
+      return (
+        fullName.includes(searchValue) ||
+        (contact.email || "").toLowerCase().includes(searchValue) ||
+        (contact.phone || "").toLowerCase().includes(searchValue) ||
+        (contact.company || "").toLowerCase().includes(searchValue) ||
+        (contact.address || "").toLowerCase().includes(searchValue)
+      );
+    });
   }, [contacts, search]);
 
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredContacts.length / contactsPerPage)
+  );
+
+  const startIndex = (currentPage - 1) * contactsPerPage;
+
+  const currentContacts = filteredContacts.slice(
+    startIndex,
+    startIndex + contactsPerPage
+  );
+
+  const handleSearchChange = (event) => {
+    setSearch(event.target.value);
+    setCurrentPage(1);
+  };
+
+  const goToPreviousPage = () => {
+    setCurrentPage((page) => Math.max(1, page - 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage((page) => Math.min(totalPages, page + 1));
+  };
+
   return (
-    <div className="dashboard-layout">
-
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <div className="sidebar-logo">C</div>
-          <span>ContactHub</span>
-        </div>
-
-        <nav className="sidebar-nav">
-          <Link to="/dashboard" className="nav-item">
-            <span>▦</span>
-            Dashboard
-          </Link>
-
-          <Link to="/contacts" className="nav-item active">
-            <span>☷</span>
-            Contacts
-          </Link>
-        </nav>
-
-        <button
-          className="logout-button"
-          onClick={() => {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            window.location.href = "/login";
-          }}
-        >
-          <span>↪</span>
-          Logout
-        </button>
-      </aside>
-
-      {/* Main */}
-      <main className="dashboard-main">
-
-        <header className="dashboard-header">
+    <main className="dashboard-page">
+      <section className="dashboard-container">
+        <div className="dashboard-header">
           <div>
-            <p className="welcome-label">Manage your contacts</p>
-<h1>Contact Directory</h1>
+            <Link to="/dashboard" className="back-link">
+              ← Back to Dashboard
+            </Link>
+
+            <h1>Manage Contacts</h1>
+
+            <p>
+              View, add, edit and organize your contacts.
+            </p>
           </div>
 
           <button
-            className="add-contact-button"
+            type="button"
+            className="primary-button"
             onClick={openAddForm}
           >
             + Add Contact
           </button>
-        </header>
+        </div>
 
-        {error && (
-          <div className="contact-error">
+        {success && (
+          <div className="success-message">
+            {success}
+          </div>
+        )}
+
+        {error && !showForm && (
+          <div className="error-message">
             {error}
           </div>
         )}
 
-        {/* Search */}
-        <div className="contacts-toolbar">
-          <input
-            className="search-input"
-            type="text"
-            placeholder="Search by name, email, phone or company..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <section className="contacts-section">
+          <div className="contacts-toolbar">
+            <div>
+              <h2>All Contacts</h2>
+              <p>
+                {filteredContacts.length}{" "}
+                {filteredContacts.length === 1 ? "contact" : "contacts"}
+              </p>
+            </div>
 
-          <div className="contact-count">
-            {filteredContacts.length} contact
-            {filteredContacts.length !== 1 ? "s" : ""}
+            <input
+              type="text"
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search contacts..."
+              className="search-input"
+            />
           </div>
-        </div>
-
-        {/* Contacts */}
-        <section className="contacts-card">
 
           {loading ? (
-            <div className="empty-state">
+            <div className="loading-state">
               Loading contacts...
             </div>
           ) : filteredContacts.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">◎</div>
-
               <h3>
-                {search
-                  ? "No contacts found"
-                  : "No contacts yet"}
+                {search ? "No contacts found" : "No contacts yet"}
               </h3>
 
               <p>
                 {search
-                  ? "Try searching for something else."
+                  ? "Try a different search."
                   : "Add your first contact to get started."}
               </p>
 
               {!search && (
                 <button
-                  className="empty-button"
+                  type="button"
+                  className="primary-button"
                   onClick={openAddForm}
                 >
-                  Add Contact
+                  + Add Contact
                 </button>
               )}
             </div>
           ) : (
-            <div className="contacts-table-wrapper">
-              <table className="contacts-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Company</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredContacts.map((contact) => (
-                    <tr key={contact.id}>
-
-                      <td>
-                        <div className="table-name">
-                          <div className="contact-avatar">
-                            {(contact.firstName?.[0] || "C").toUpperCase()}
-                          </div>
-
-                          <div>
-                            <strong>
-                              {contact.firstName}{" "}
-                              {contact.lastName}
-                            </strong>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td>
-                        {contact.email || "—"}
-                      </td>
-
-                      <td>
-                        {contact.phone || "—"}
-                      </td>
-
-                      <td>
-                        {contact.company || "—"}
-                      </td>
-
-                      <td>
-                        <div className="table-actions">
-                          <button
-                            className="edit-button"
-                            onClick={() =>
-                              openEditForm(contact)
-                            }
-                          >
-                            Edit
-                          </button>
-
-                          <button
-                            className="delete-button"
-                            onClick={() =>
-                              handleDelete(contact.id)
-                            }
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-
+            <>
+              <div className="contacts-table-wrapper">
+                <table className="contacts-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Company</th>
+                      <th>Address</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+
+                  <tbody>
+                    {currentContacts.map((contact) => (
+                      <tr key={contact.id}>
+                        <td>
+                          <div className="contact-name">
+                            {contact.firstName} {contact.lastName}
+                          </div>
+                        </td>
+
+                        <td>
+                          {contact.email || "-"}
+                        </td>
+
+                        <td>
+                          {contact.phone || "-"}
+                        </td>
+
+                        <td>
+                          {contact.company || "-"}
+                        </td>
+
+                        <td>
+                          {contact.address || "-"}
+                        </td>
+
+                        <td>
+                          <div className="contact-actions">
+                            <button
+                              type="button"
+                              className="edit-button"
+                              onClick={() => openEditForm(contact)}
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              type="button"
+                              className="delete-button"
+                              onClick={() => handleDelete(contact.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="pagination">
+                <button
+                  type="button"
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            </>
           )}
-
         </section>
+      </section>
 
-      </main>
-
-      {/* Modal */}
       {showForm && (
         <div className="modal-overlay">
           <div className="contact-modal">
-
             <div className="modal-header">
               <div>
                 <h2>
-                  {editingId
-                    ? "Edit Contact"
-                    : "Add Contact"}
+                  {editingId ? "Edit Contact" : "Add Contact"}
                 </h2>
 
                 <p>
                   {editingId
-                    ? "Update contact information."
-                    : "Add a new contact to your list."}
+                    ? "Update the contact details below."
+                    : "Enter the contact details below."}
                 </p>
               </div>
 
               <button
+                type="button"
                 className="modal-close"
                 onClick={closeForm}
+                disabled={saving}
               >
                 ×
               </button>
             </div>
 
             {error && (
-              <div className="contact-error">
+              <div className="error-message">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit}>
-
-              <div className="modal-form-grid">
-
+            <form onSubmit={handleSubmit} className="contact-form">
+              <div className="form-row">
                 <div className="form-group">
-                  <label>First name *</label>
+                  <label htmlFor="firstName">
+                    First Name
+                  </label>
+
                   <input
+                    id="firstName"
                     name="firstName"
+                    type="text"
                     value={form.firstName}
                     onChange={handleChange}
-                    placeholder="First name"
+                    placeholder="Enter first name"
+                    required
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Last name *</label>
+                  <label htmlFor="lastName">
+                    Last Name
+                  </label>
+
                   <input
+                    id="lastName"
                     name="lastName"
+                    type="text"
                     value={form.lastName}
                     onChange={handleChange}
-                    placeholder="Last name"
+                    placeholder="Enter last name"
+                    required
                   />
                 </div>
+              </div>
 
+              <div className="form-row">
                 <div className="form-group">
-                  <label>Email</label>
+                  <label htmlFor="email">
+                    Email
+                  </label>
+
                   <input
-                    type="email"
+                    id="email"
                     name="email"
+                    type="email"
                     value={form.email}
                     onChange={handleChange}
-                    placeholder="email@example.com"
+                    placeholder="Enter email"
+                    required
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Phone *</label>
+                  <label htmlFor="phone">
+                    Phone
+                  </label>
+
                   <input
+                    id="phone"
                     name="phone"
+                    type="tel"
                     value={form.phone}
                     onChange={handleChange}
-                    placeholder="03001234567"
+                    placeholder="Enter phone number"
+                    required
                   />
                 </div>
+              </div>
 
-                <div className="form-group">
-                  <label>Company</label>
-                  <input
-                    name="company"
-                    value={form.company}
-                    onChange={handleChange}
-                    placeholder="Company name"
-                  />
-                </div>
+              <div className="form-group">
+                <label htmlFor="company">
+                  Company
+                </label>
 
-                <div className="form-group">
-                  <label>Address</label>
-                  <input
-                    name="address"
-                    value={form.address}
-                    onChange={handleChange}
-                    placeholder="Address"
-                  />
-                </div>
+                <input
+                  id="company"
+                  name="company"
+                  type="text"
+                  value={form.company}
+                  onChange={handleChange}
+                  placeholder="Enter company name"
+                />
+              </div>
 
+              <div className="form-group">
+                <label htmlFor="address">
+                  Address
+                </label>
+
+                <textarea
+                  id="address"
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="Enter address"
+                  rows="3"
+                />
               </div>
 
               <div className="modal-actions">
                 <button
                   type="button"
-                  className="cancel-button"
+                  className="secondary-button"
                   onClick={closeForm}
+                  disabled={saving}
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="save-button"
+                  className="primary-button"
                   disabled={saving}
                 >
                   {saving
@@ -467,11 +568,10 @@ export default function Contacts() {
                     : "Add Contact"}
                 </button>
               </div>
-
             </form>
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }
