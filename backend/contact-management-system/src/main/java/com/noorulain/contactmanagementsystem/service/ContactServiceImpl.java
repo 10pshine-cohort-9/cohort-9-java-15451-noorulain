@@ -87,6 +87,21 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Contact> searchContacts(String keyword, String username) {
+
+        User user = getUser(username);
+
+        return contactRepository
+                .findByUserAndFirstNameContainingIgnoreCaseOrUserAndLastNameContainingIgnoreCase(
+                        user,
+                        keyword,
+                        user,
+                        keyword
+                );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Contact getContactById(Long id, String username) {
 
         User user = getUser(username);
@@ -164,4 +179,3 @@ public class ContactServiceImpl implements ContactService {
         );
     }
 }
-
