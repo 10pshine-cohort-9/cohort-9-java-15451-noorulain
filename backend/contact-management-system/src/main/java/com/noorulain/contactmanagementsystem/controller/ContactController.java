@@ -57,6 +57,20 @@ public class ContactController {
         return ResponseEntity.ok(contacts);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<ContactResponse>> searchContacts(
+            @RequestParam String keyword,
+            Authentication authentication) {
+
+        List<ContactResponse> contacts =
+                contactService.searchContacts(keyword, authentication.getName())
+                        .stream()
+                        .map(ContactResponse::fromEntity)
+                        .toList();
+
+        return ResponseEntity.ok(contacts);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ContactResponse> getContactById(
             @PathVariable Long id,

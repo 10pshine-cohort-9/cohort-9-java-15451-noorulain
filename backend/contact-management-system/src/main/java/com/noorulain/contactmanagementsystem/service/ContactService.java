@@ -10,6 +10,9 @@ public interface ContactService {
 
     List<Contact> getAllContacts(String username);
 
+    // ADD THIS METHOD
+    List<Contact> searchContacts(String keyword, String username);
+
     Contact getContactById(Long id, String username);
 
     Contact updateContact(

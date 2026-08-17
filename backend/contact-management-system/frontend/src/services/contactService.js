@@ -26,3 +26,12 @@ export async function deleteContact(id) {
   const response = await axiosClient.delete(`${BASE_URL}/${id}`);
   return response.data;
 }
+
+export async function searchContacts(keyword) {
+  const response = await axiosClient.get(`${BASE_URL}/search`, {
+    params: {
+      keyword,
+    },
+  });
+  return response.data;
+}
