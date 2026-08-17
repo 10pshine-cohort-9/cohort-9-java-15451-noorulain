@@ -30,14 +30,12 @@ export default function Contacts() {
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-const [showForm, setShowForm] = useState(false);
-const [showViewModal, setShowViewModal] = useState(false);
-const [selectedContact, setSelectedContact] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedContact, setSelectedContact] = useState(null);
 
-const [showDetails, setShowDetails] = useState(false);
-
-const [currentPage, setCurrentPage] = useState(1);
-const contactsPerPage = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+  const contactsPerPage = 5;
 
   useEffect(() => {
     loadContacts();
@@ -101,16 +99,6 @@ const contactsPerPage = 5;
     setShowForm(true);
   };
 
-  const openDetails = (contact) => {
-  setSelectedContact(contact);
-  setShowDetails(true);
-};
-
-const closeDetails = () => {
-  setSelectedContact(null);
-  setShowDetails(false);
-};
-
   const closeForm = () => {
     if (saving) return;
 
@@ -119,15 +107,16 @@ const closeDetails = () => {
     setForm(emptyForm);
     setError("");
   };
-  const openViewModal = (contact) => {
-  setSelectedContact(contact);
-  setShowViewModal(true);
-};
 
-const closeViewModal = () => {
-  setSelectedContact(null);
-  setShowViewModal(false);
-};
+  const openViewModal = (contact) => {
+    setSelectedContact(contact);
+    setShowViewModal(true);
+  };
+
+  const closeViewModal = () => {
+    setSelectedContact(null);
+    setShowViewModal(false);
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -253,23 +242,23 @@ const closeViewModal = () => {
     startIndex + contactsPerPage
   );
 
-const handleSearchChange = async (event) => {
-  const value = event.target.value;
+  const handleSearchChange = async (event) => {
+    const value = event.target.value;
 
-  setSearch(value);
-  setCurrentPage(1);
+    setSearch(value);
+    setCurrentPage(1);
 
-  try {
-    if (value.trim() === "") {
-      await loadContacts();
-    } else {
-      const data = await searchContacts(value);
-      setContacts(data);
+    try {
+      if (value.trim() === "") {
+        await loadContacts();
+      } else {
+        const data = await searchContacts(value);
+        setContacts(data);
+      }
+    } catch (error) {
+      console.error(error);
     }
-  } catch (error) {
-    console.error(error);
-  }
-};
+  };
 
   const goToPreviousPage = () => {
     setCurrentPage((page) => Math.max(1, page - 1));
@@ -403,31 +392,29 @@ const handleSearchChange = async (event) => {
 
                         <td>
                           <div className="contact-actions">
-                            
-<button
-  type="button"
-  className="view-button"
-  onClick={() => openViewModal(contact)}
->
-  View
-</button>
+                            <button
+                              type="button"
+                              className="view-button"
+                              onClick={() => openViewModal(contact)}
+                            >
+                              View
+                            </button>
 
-<button
-  type="button"
-  className="edit-button"
-  onClick={() => openEditForm(contact)}
->
-  Edit
-</button>
+                            <button
+                              type="button"
+                              className="edit-button"
+                              onClick={() => openEditForm(contact)}
+                            >
+                              Edit
+                            </button>
 
-<button
-  type="button"
-  className="delete-button"
-  onClick={() => handleDelete(contact.id)}
->
-  Delete
-</button>
-
+                            <button
+                              type="button"
+                              className="delete-button"
+                              onClick={() => handleDelete(contact.id)}
+                            >
+                              Delete
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -619,139 +606,74 @@ const handleSearchChange = async (event) => {
           </div>
         </div>
       )}
-{showDetails && selectedContact && (
-  <div className="modal-overlay">
-    <div className="contact-modal">
-      <div className="modal-header">
-        <div>
-          <h2>Contact Details</h2>
-          <p>View complete contact information.</p>
+
+      {showViewModal && selectedContact && (
+        <div className="modal-overlay">
+          <div className="contact-modal">
+            <div className="modal-header">
+              <div>
+                <h2>Contact Details</h2>
+                <p>View complete contact information.</p>
+              </div>
+
+              <button
+                type="button"
+                className="modal-close"
+                onClick={closeViewModal}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="contact-details">
+              <div className="detail-row">
+                <strong>First Name:</strong>
+                <span>{selectedContact.firstName || "-"}</span>
+              </div>
+
+              <div className="detail-row">
+                <strong>Last Name:</strong>
+                <span>{selectedContact.lastName || "-"}</span>
+              </div>
+
+              <div className="detail-row">
+                <strong>Title:</strong>
+                <span>{selectedContact.title || "-"}</span>
+              </div>
+
+              <div className="detail-row">
+                <strong>Email:</strong>
+                <span>{selectedContact.email || "-"}</span>
+              </div>
+
+              <div className="detail-row">
+                <strong>Phone:</strong>
+                <span>{selectedContact.phone || "-"}</span>
+              </div>
+
+              <div className="detail-row">
+                <strong>Company:</strong>
+                <span>{selectedContact.company || "-"}</span>
+              </div>
+
+              <div className="detail-row">
+                <strong>Address:</strong>
+                <span>{selectedContact.address || "-"}</span>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="primary-button"
+                onClick={closeViewModal}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
-
-        <button
-          type="button"
-          className="modal-close"
-          onClick={closeDetails}
-        >
-          ×
-        </button>
-      </div>
-
-      <div className="contact-details">
-
-        <div className="detail-row">
-          <strong>First Name:</strong>
-          <span>{selectedContact.firstName}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Last Name:</strong>
-          <span>{selectedContact.lastName}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Email:</strong>
-          <span>{selectedContact.email || "-"}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Phone:</strong>
-          <span>{selectedContact.phone || "-"}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Company:</strong>
-          <span>{selectedContact.company || "-"}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Address:</strong>
-          <span>{selectedContact.address || "-"}</span>
-        </div>
-
-      </div>
-
-      <div className="modal-actions">
-        <button
-          type="button"
-          className="primary-button"
-          onClick={closeDetails}
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-{showViewModal && selectedContact && (
-  <div className="modal-overlay">
-    <div className="contact-modal">
-      <div className="modal-header">
-        <div>
-          <h2>Contact Details</h2>
-          <p>View complete contact information.</p>
-        </div>
-
-        <button
-          type="button"
-          className="modal-close"
-          onClick={closeViewModal}
-        >
-          ×
-        </button>
-      </div>
-
-      <div className="contact-details">
-        <div className="detail-row">
-          <strong>First Name:</strong>
-          <span>{selectedContact.firstName || "-"}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Last Name:</strong>
-          <span>{selectedContact.lastName || "-"}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Title:</strong>
-          <span>{selectedContact.title || "-"}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Email:</strong>
-          <span>{selectedContact.email || "-"}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Phone:</strong>
-          <span>{selectedContact.phone || "-"}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Company:</strong>
-          <span>{selectedContact.company || "-"}</span>
-        </div>
-
-        <div className="detail-row">
-          <strong>Address:</strong>
-          <span>{selectedContact.address || "-"}</span>
-        </div>
-      </div>
-
-      <div className="modal-actions">
-        <button
-          type="button"
-          className="primary-button"
-          onClick={closeViewModal}
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+      )}
     </main>
   );
 }
