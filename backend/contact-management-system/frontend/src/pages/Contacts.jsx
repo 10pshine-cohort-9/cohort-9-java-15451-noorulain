@@ -41,29 +41,52 @@ export default function Contacts() {
     loadContacts();
   }, []);
 
-  const loadContacts = async () => {
-    try {
-      setLoading(true);
-      setError("");
+ const loadContacts = async () => {
+  try {
+    setLoading(true);
+    setError("");
 
-      const response = await getContacts();
+    const response = await getContacts();
 
-      const data = Array.isArray(response)
-        ? response
-        : response?.data || [];
+    console.log("GET CONTACTS RESPONSE:", response);
 
-      setContacts(data);
-    } catch (err) {
-      console.error("Error loading contacts:", err);
-      setError(
-        err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          "Failed to load contacts."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Axios response -> response.data
+    const responseData = response?.data ?? response;
+
+    // Backend returns Spring Page:
+    // {
+    //   content: [...],
+    //   totalElements: 7,
+    //   totalPages: 1
+    // }
+    const data = Array.isArray(responseData)
+      ? responseData
+      : Array.isArray(responseData?.content)
+      ? responseData.content
+      : Array.isArray(responseData?.data)
+      ? responseData.data
+      : Array.isArray(responseData?.data?.content)
+      ? responseData.data.content
+      : [];
+
+    console.log("CONTACTS ARRAY:", data);
+    console.log("CONTACT COUNT:", data.length);
+
+    setContacts(data);
+  } catch (err) {
+    console.error("Error loading contacts:", err);
+
+    setContacts([]);
+
+    setError(
+      err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Failed to load contacts."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -243,22 +266,39 @@ export default function Contacts() {
   );
 
   const handleSearchChange = async (event) => {
-    const value = event.target.value;
+  const value = event.target.value;
 
-    setSearch(value);
-    setCurrentPage(1);
+  setSearch(value);
+  setCurrentPage(1);
 
-    try {
-      if (value.trim() === "") {
-        await loadContacts();
-      } else {
-        const data = await searchContacts(value);
-        setContacts(data);
-      }
-    } catch (error) {
-      console.error(error);
+  try {
+    if (value.trim() === "") {
+      await loadContacts();
+      return;
     }
-  };
+
+    const response = await searchContacts(value);
+
+    console.log("SEARCH RESPONSE:", response);
+
+    const responseData = response?.data ?? response;
+
+    const data = Array.isArray(responseData)
+      ? responseData
+      : Array.isArray(responseData?.content)
+      ? responseData.content
+      : Array.isArray(responseData?.data)
+      ? responseData.data
+      : Array.isArray(responseData?.data?.content)
+      ? responseData.data.content
+      : [];
+
+    setContacts(data);
+  } catch (error) {
+    console.error("Error searching contacts:", error);
+    setContacts([]);
+  }
+};
 
   const goToPreviousPage = () => {
     setCurrentPage((page) => Math.max(1, page - 1));

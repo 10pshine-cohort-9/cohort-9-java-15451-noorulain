@@ -6,6 +6,9 @@ import com.noorulain.contactmanagementsystem.entity.Contact;
 import com.noorulain.contactmanagementsystem.service.ContactService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -45,14 +48,20 @@ public class ContactController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ContactResponse>> getAllContacts(
+    public ResponseEntity<Page<ContactResponse>> getAllContacts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
-        List<ContactResponse> contacts =
-                contactService.getAllContacts(authentication.getName())
-                        .stream()
-                        .map(ContactResponse::fromEntity)
-                        .toList();
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<ContactResponse> contacts =
+                contactService
+                        .getAllContacts(
+                                authentication.getName(),
+                                pageable
+                        )
+                        .map(ContactResponse::fromEntity);
 
         return ResponseEntity.ok(contacts);
     }
@@ -63,7 +72,10 @@ public class ContactController {
             Authentication authentication) {
 
         List<ContactResponse> contacts =
-                contactService.searchContacts(keyword, authentication.getName())
+                contactService.searchContacts(
+                                keyword,
+                                authentication.getName()
+                        )
                         .stream()
                         .map(ContactResponse::fromEntity)
                         .toList();

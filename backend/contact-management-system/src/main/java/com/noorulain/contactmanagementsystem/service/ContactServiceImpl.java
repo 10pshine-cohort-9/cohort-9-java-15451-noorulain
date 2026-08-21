@@ -7,6 +7,8 @@ import com.noorulain.contactmanagementsystem.repository.ContactRepository;
 import com.noorulain.contactmanagementsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,16 +80,20 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Contact> getAllContacts(String username) {
+    public Page<Contact> getAllContacts(
+            String username,
+            Pageable pageable) {
 
         User user = getUser(username);
 
-        return contactRepository.findByUser(user);
+        return contactRepository.findByUser(user, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Contact> searchContacts(String keyword, String username) {
+    public List<Contact> searchContacts(
+            String keyword,
+            String username) {
 
         User user = getUser(username);
 

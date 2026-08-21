@@ -68,16 +68,16 @@ public class SecurityConfig {
             HttpSecurity http
     ) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
+     http
+    .csrf(csrf -> csrf.disable()) // CSRF is disabled because this is a stateless JWT-based REST API.
 
-                .cors(cors -> {})
+    .cors(cors -> {})
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
-                )
+    .sessionManagement(session ->
+        session.sessionCreationPolicy(
+            SessionCreationPolicy.STATELESS
+        )
+    )
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
